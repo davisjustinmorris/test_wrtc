@@ -1,7 +1,40 @@
 const Socket = require("websocket").server
-const http = require("http")
+const http = require("https")
+const fs = require('fs')
+const httpStatus = require('http-status-codes')
 
-const server = http.createServer((req, res) => {})
+const options = {
+    key: fs.readFileSync("private.key"),
+    cert: fs.readFileSync("certificate.crt")
+}
+
+let valid_endpoints = [
+    '/receiver.html',
+    '/receiver.js',
+    '/sender.html',
+    '/sender.js',
+    '/style.css'
+]
+
+// const server = http.createServer((req, res) => {})
+server = http.createServer(options, (request, response) => {
+    response.writeHead(httpStatus.StatusCodes.OK, {
+        "Content-Type": "text/html"
+    });
+    console.log(request.url)
+    if (valid_endpoints.includes(request.url)) {
+        fs.readFile('public' + request.url, (error, data) => {
+            response.write(data);
+            response.end();
+        })
+    } else {
+        response.end(`
+<h1>Are you lost?</h1><br>
+<a href="/sender.html">Open sender -></a>        
+<a href="/receiver.html">Open receiver -></a>        
+        `);
+    }
+})
 
 server.listen(3000, () => {
     console.log("Listening on port 3000...")
